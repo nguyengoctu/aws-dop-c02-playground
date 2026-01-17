@@ -26,3 +26,11 @@ data "terraform_remote_state" "infra" {
     path = "../02-infra/terraform.tfstate"
   }
 }
+
+# Đọc trạng thái từ Layer 3 (03-monitoring) để lấy CloudWatch Alarm
+data "terraform_remote_state" "monitoring" {
+  backend = "local"
+  config = {
+    path = "../03-monitoring/terraform.tfstate"
+  }
+}

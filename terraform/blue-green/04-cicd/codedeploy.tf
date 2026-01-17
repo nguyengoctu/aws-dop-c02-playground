@@ -49,10 +49,16 @@ resource "aws_codedeploy_deployment_group" "bg_group" {
   # Cấu hình Deploy: Yêu cầu traffic route ít nhất 50%
   deployment_config_name = aws_codedeploy_deployment_config.custom_fifty_percent.id
 
-  # Tự động rollback nếu deploy thất bại
+  # Cấu hình Alarm để tự động Rollback khi Latency cao (Layer 3 Monitoring)
+  alarm_configuration {
+    alarms  = [data.terraform_remote_state.monitoring.outputs.alarm_name]
+    enabled = true
+  }
+
+  # Tự động rollback nếu deploy thất bại HOẶC Alarm kêu
   auto_rollback_configuration {
     enabled = true
-    events  = ["DEPLOYMENT_FAILURE"]
+    events  = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
   }
 
   # CRITICAL: Ignore changes trên autoscaling_groups vì CodeDeploy tự quản lý
