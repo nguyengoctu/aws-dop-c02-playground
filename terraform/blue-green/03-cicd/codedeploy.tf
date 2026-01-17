@@ -54,6 +54,13 @@ resource "aws_codedeploy_deployment_group" "bg_group" {
     enabled = true
     events  = ["DEPLOYMENT_FAILURE"]
   }
+
+  # CRITICAL: Ignore changes trên autoscaling_groups vì CodeDeploy tự quản lý
+  # Sau lần deployment đầu tiên, CodeDeploy sẽ terminate ASG cũ và tạo ASG mới với tên tự gen
+  # Nếu không ignore, Terraform sẽ cố tìm ASG cũ (đã bị xóa) và báo lỗi
+  lifecycle {
+    ignore_changes = [autoscaling_groups]
+  }
 }
 
 # --- Custom Deployment Configuration (Yêu cầu đề bài) ---

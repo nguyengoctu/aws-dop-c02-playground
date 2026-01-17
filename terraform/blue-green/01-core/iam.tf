@@ -88,6 +88,42 @@ resource "aws_iam_role_policy_attachment" "codedeploy_elb" {
   policy_arn = "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"
 }
 
+# FIX CRITICAL: Cấp quyền EC2 cho CodeDeploy để copy ASG với Launch Template
+# Khi CodeDeploy copy ASG, nó cần tạo Launch Template mới cho Green fleet
+# AutoScalingFullAccess KHÔNG bao gồm các quyền EC2 này!
+resource "aws_iam_role_policy" "codedeploy_ec2_launch_template" {
+  name = "${var.project_name}-codedeploy-ec2-lt"
+  role = aws_iam_role.codedeploy_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "ec2:RunInstances",
+        "ec2:CreateLaunchTemplate",
+        "ec2:CreateLaunchTemplateVersion",
+        "ec2:ModifyLaunchTemplate",
+        "ec2:DeleteLaunchTemplate",
+        "ec2:DescribeLaunchTemplates",
+        "ec2:DescribeLaunchTemplateVersions",
+        "ec2:DescribeInstances",
+        "ec2:DescribeInstanceStatus",
+        "ec2:DescribeImages",
+        "ec2:DescribeSnapshots",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcs",
+        "ec2:DescribeKeyPairs",
+        "ec2:DescribeAvailabilityZones",
+        "ec2:CreateTags",
+        "ec2:TerminateInstances"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
 # FIX: Cấp quyền iam:PassRole (Rất quan trọng cho Blue/Green)
 # Khi CodeDeploy copy ASG để tạo máy mới, nó cần quyền "PassRole" để gán IAM Role (ec2_profile) cho các máy mới đó.
 # Nếu thiếu quyền này, quá trình tạo ASG sẽ thất bại.

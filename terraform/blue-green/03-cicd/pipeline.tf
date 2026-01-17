@@ -65,7 +65,7 @@ resource "aws_codepipeline" "pipeline" {
       configuration = {
         RepositoryName       = aws_codecommit_repository.repo.repository_name
         BranchName           = "master"
-        PollForSourceChanges = "false" # Dùng CloudWatch Events ở môi trường thật, lab dùng polling đơn giản
+        PollForSourceChanges = "false" # Dùng EventBridge để trigger
       }
     }
   }
