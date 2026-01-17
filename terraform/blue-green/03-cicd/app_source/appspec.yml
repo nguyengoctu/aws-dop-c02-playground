@@ -1,0 +1,17 @@
+version: 0.0
+os: linux
+files:
+  - source: index.html
+    destination: /var/www/html/
+  - source: scripts/
+    destination: /opt/codedeploy-agent/deployment-scripts/
+hooks:
+  AfterInstall:
+    - location: scripts/install_dependencies.sh
+      timeout: 300
+      runas: root
+  # Hook này chạy TRƯỚC khi traffic được chuyển vào instance mới
+  BeforeAllowTraffic:
+    - location: scripts/cleanup.sh
+      timeout: 300
+      runas: root

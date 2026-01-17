@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - echo "Packaging application..."
+      # In a real app, you might build binaries here. 
+      # For this HTML app, we just move files to the right place if needed 
+      # or just rely on the artifacts phase.
+  post_build:
+    commands:
+      - echo "Build completed."
+artifacts:
+  files:
+    - index.html
+    - appspec.yml
+    - scripts/**/*
