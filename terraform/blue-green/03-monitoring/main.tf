@@ -2,7 +2,7 @@ provider "aws" {
   region = var.region
 }
 
-# Đọc state từ Layer 2 (Infra) để lấy thông tin Load Balancer
+# Read state from Layer 2 (Infra) to get Load Balancer info
 data "terraform_remote_state" "infra" {
   backend = "local"
   config = {

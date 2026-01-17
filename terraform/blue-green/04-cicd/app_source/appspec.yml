@@ -10,7 +10,7 @@ hooks:
     - location: scripts/install_dependencies.sh
       timeout: 300
       runas: root
-  # Hook này chạy TRƯỚC khi traffic được chuyển vào instance mới
+  # This hook runs BEFORE traffic is routed to the new instance
   BeforeAllowTraffic:
     - location: scripts/cleanup.sh
       timeout: 300

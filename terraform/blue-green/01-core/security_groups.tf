@@ -1,11 +1,11 @@
-# --- Security Group cho Load Balancer ---
+# --- Security Group for Load Balancer ---
 resource "aws_security_group" "alb_sg" {
   name        = "${var.project_name}-alb-sg"
-  description = "Cho phep HTTP truy cap vao ALB"
+  description = "Allow HTTP access to ALB"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    description = "HTTP tu Internet"
+    description = "HTTP from Internet"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -20,15 +20,15 @@ resource "aws_security_group" "alb_sg" {
   }
 }
 
-# --- Security Group cho EC2 Instance ---
+# --- Security Group for EC2 Instance ---
 resource "aws_security_group" "ec2_sg" {
   name        = "${var.project_name}-ec2-sg"
-  description = "Cho phep HTTP tu ALB va SSH/SSM"
+  description = "Allow HTTP from ALB and SSH/SSM"
   vpc_id      = data.aws_vpc.default.id
 
-  # Chỉ cho phép Traffic từ ALB
+  # Only allow Traffic from ALB
   ingress {
-    description     = "HTTP tu ALB"
+    description     = "HTTP from ALB"
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"

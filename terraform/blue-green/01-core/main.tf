@@ -2,8 +2,8 @@ provider "aws" {
   region = var.region
 }
 
-# Lấy thông tin VPC mặc định và Subnets để chia sẻ cho các layer khác
-# (Trong thực tế nên tạo VPC riêng, nhưng lab này dùng default cho gọn)
+# Get default VPC and Subnets info to share with other layers
+# (In reality should create separate VPC, but using default for simplicity in this lab)
 data "aws_vpc" "default" {
   default = true
 }

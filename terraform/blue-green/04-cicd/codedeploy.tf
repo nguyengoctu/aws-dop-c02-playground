@@ -10,7 +10,7 @@ resource "aws_codedeploy_deployment_group" "bg_group" {
   deployment_group_name = "${var.project_name}-bg-group"
   service_role_arn      = data.terraform_remote_state.core.outputs.codedeploy_service_role_arn
 
-  # Deployment Style: Blue/Green với traffic control (nghĩa là dùng ALB)
+  # Deployment Style: Blue/Green with traffic control (i.e., using ALB)
   deployment_style {
     deployment_option = "WITH_TRAFFIC_CONTROL"
     deployment_type   = "BLUE_GREEN"
@@ -18,16 +18,16 @@ resource "aws_codedeploy_deployment_group" "bg_group" {
 
   load_balancer_info {
     target_group_info {
-      # Gửi traffic vào Target Group của Layer 2
+      # Send traffic to Target Group from Layer 2
       name = data.terraform_remote_state.infra.outputs.target_group_name
     }
   }
 
-  # QUAN TRỌNG: Với Blue/Green, ta gắn ASG ban đầu vào đây.
-  # CodeDeploy sẽ copy ASG này để tạo ra "Green" fleet mới.
+  # IMPORTANT: For Blue/Green, we attach the initial ASG here.
+  # CodeDeploy will copy this ASG to create a new "Green" fleet.
   autoscaling_groups = [data.terraform_remote_state.infra.outputs.asg_name]
 
-  # Cấu hình xử lý Instances cũ/mới (Yêu cầu đề bài: Terminate instances cũ)
+  # Configuration for handling old/new Instances (Problem requirement: Terminate old instances)
   blue_green_deployment_config {
     deployment_ready_option {
       action_on_timeout    = "CONTINUE_DEPLOYMENT"
@@ -36,40 +36,40 @@ resource "aws_codedeploy_deployment_group" "bg_group" {
 
     terminate_blue_instances_on_deployment_success {
       action                           = "TERMINATE"
-      termination_wait_time_in_minutes = 5 # Giữ lại 5 phút rồi xóa
+      termination_wait_time_in_minutes = 5 # Keep for 5 minutes then terminate
     }
 
-    # QUAN TRỌNG: Cấu hình để CodeDeploy TỰ ĐỘNG copy ASG cũ ra ASG mới (Green Fleet)
-    # Nếu thiếu dòng này, nó sẽ chọn "Manually provision instances" và gây lỗi NO_INSTANCES
+    # IMPORTANT: Configure CodeDeploy to AUTOMATICALLY copy old ASG to new ASG (Green Fleet)
+    # If missing, it defaults to "Manually provision instances" and causes NO_INSTANCES error
     green_fleet_provisioning_option {
       action = "COPY_AUTO_SCALING_GROUP"
     }
   }
 
-  # Cấu hình Deploy: Yêu cầu traffic route ít nhất 50%
+  # Deploy Config: Require at least 50% traffic routing
   deployment_config_name = aws_codedeploy_deployment_config.custom_fifty_percent.id
 
-  # Cấu hình Alarm để tự động Rollback khi Latency cao (Layer 3 Monitoring)
+  # Alarm Config for automatic Rollback on high Latency (Layer 3 Monitoring)
   alarm_configuration {
     alarms  = [data.terraform_remote_state.monitoring.outputs.alarm_name]
     enabled = true
   }
 
-  # Tự động rollback nếu deploy thất bại HOẶC Alarm kêu
+  # Auto rollback if deployment fails OR Alarm triggers
   auto_rollback_configuration {
     enabled = true
     events  = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
   }
 
-  # CRITICAL: Ignore changes trên autoscaling_groups vì CodeDeploy tự quản lý
-  # Sau lần deployment đầu tiên, CodeDeploy sẽ terminate ASG cũ và tạo ASG mới với tên tự gen
-  # Nếu không ignore, Terraform sẽ cố tìm ASG cũ (đã bị xóa) và báo lỗi
+  # CRITICAL: Ignore changes on autoscaling_groups as CodeDeploy manages it
+  # After first deployment, CodeDeploy terminates old ASG and creates new ASG with auto-generated name
+  # If not ignored, Terraform tries to find old (deleted) ASG and errors out
   lifecycle {
     ignore_changes = [autoscaling_groups]
   }
 }
 
-# --- Custom Deployment Configuration (Yêu cầu đề bài) ---
+# --- Custom Deployment Configuration (Problem Requirement) ---
 # "Create a custom deployment configuration... defined as 50%"
 resource "aws_codedeploy_deployment_config" "custom_fifty_percent" {
   deployment_config_name = "${var.project_name}-min-50-percent"

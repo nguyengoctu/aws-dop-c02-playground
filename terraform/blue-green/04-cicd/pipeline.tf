@@ -1,16 +1,16 @@
-# --- S3 Bucket chứa Artifacts ---
+# --- S3 Bucket for Artifacts ---
 resource "aws_s3_bucket" "codepipeline_bucket" {
   bucket_prefix = "${var.project_name}-pipeline-artifacts-"
-  force_destroy = true # Cho phép xóa bucket khi destroy terraform (chỉ dùng cho lab)
+  force_destroy = true # Allow bucket deletion on terraform destroy (for lab only)
 }
 
-# --- CodeCommit Repository (Chứa Source Code) ---
+# --- CodeCommit Repository (Contains Source Code) ---
 resource "aws_codecommit_repository" "repo" {
   repository_name = "${var.project_name}-repo"
-  description     = "Repository cho Blue/Green Lab"
+  description     = "Repository for Blue/Green Lab"
 }
 
-# --- CodeBuild Project (Đóng gói ứng dụng) ---
+# --- CodeBuild Project (Package Application) ---
 resource "aws_codebuild_project" "build_project" {
   name          = "${var.project_name}-build"
   description   = "Builds the application artifacts"
@@ -30,7 +30,7 @@ resource "aws_codebuild_project" "build_project" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = "buildspec.yml" # Tìm file buildspec.yml ở thư mục gốc
+    buildspec = "buildspec.yml" # Find buildspec.yml in root directory
   }
 
   logs_config {
@@ -40,7 +40,7 @@ resource "aws_codebuild_project" "build_project" {
   }
 }
 
-# --- CodePipeline (Quy trình CI/CD) ---
+# --- CodePipeline (CI/CD Process) ---
 resource "aws_codepipeline" "pipeline" {
   name     = "${var.project_name}-pipeline"
   role_arn = data.terraform_remote_state.core.outputs.codepipeline_service_role_arn
@@ -50,7 +50,7 @@ resource "aws_codepipeline" "pipeline" {
     type     = "S3"
   }
 
-  # Giai đoạn 1: Source (Lấy code từ CodeCommit)
+  # Stage 1: Source (Fetch code from CodeCommit)
   stage {
     name = "Source"
 
@@ -65,12 +65,12 @@ resource "aws_codepipeline" "pipeline" {
       configuration = {
         RepositoryName       = aws_codecommit_repository.repo.repository_name
         BranchName           = "master"
-        PollForSourceChanges = "false" # Dùng EventBridge để trigger
+        PollForSourceChanges = "false" # Use EventBridge to trigger
       }
     }
   }
 
-  # Giai đoạn 2: Build (Dùng CodeBuild)
+  # Stage 2: Build (Use CodeBuild)
   stage {
     name = "Build"
 
@@ -89,7 +89,7 @@ resource "aws_codepipeline" "pipeline" {
     }
   }
 
-  # Giai đoạn 3: Deploy (Dùng CodeDeploy)
+  # Stage 3: Deploy (Use CodeDeploy)
   stage {
     name = "Deploy"
 

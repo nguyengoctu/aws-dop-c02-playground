@@ -11,7 +11,7 @@ variable "project_name" {
 }
 
 # --- Remote State Data Sources ---
-# Đọc trạng thái từ Layer 1 (01-core) để lấy IAM Roles
+# Read state from Layer 1 (01-core) to get IAM Roles
 data "terraform_remote_state" "core" {
   backend = "local"
   config = {
@@ -19,7 +19,7 @@ data "terraform_remote_state" "core" {
   }
 }
 
-# Đọc trạng thái từ Layer 2 (02-infra) để lấy ASG và Target Group
+# Read state from Layer 2 (02-infra) to get ASG and Target Group
 data "terraform_remote_state" "infra" {
   backend = "local"
   config = {
@@ -27,7 +27,7 @@ data "terraform_remote_state" "infra" {
   }
 }
 
-# Đọc trạng thái từ Layer 3 (03-monitoring) để lấy CloudWatch Alarm
+# Read state from Layer 3 (03-monitoring) to get CloudWatch Alarm
 data "terraform_remote_state" "monitoring" {
   backend = "local"
   config = {

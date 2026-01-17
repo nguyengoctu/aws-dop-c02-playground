@@ -7,7 +7,7 @@ output "asg_name" {
 }
 
 output "alb_dns_name" {
-  description = "Dia chi DNS de truy cap vao Load Balancer"
+  description = "DNS address to access Load Balancer"
   value       = aws_lb.main.dns_name
 }
 

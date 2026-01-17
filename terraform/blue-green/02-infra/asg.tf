@@ -1,4 +1,4 @@
-# Tìm AMI Amazon Linux 2023 mới nhất
+# Find latest Amazon Linux 2023 AMI
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -10,21 +10,21 @@ data "aws_ami" "amazon_linux" {
 }
 
 # --- Launch Template ---
-# Định nghĩa cấu hình cho các EC2 instances
+# Define configuration for EC2 instances
 resource "aws_launch_template" "main" {
   name_prefix   = "${var.project_name}-lt-"
   image_id      = data.aws_ami.amazon_linux.id
   instance_type = var.instance_type
 
-  # Gắn Instance Profile (IAM Role) lấy từ Layer 1
+  # Attach Instance Profile (IAM Role) from Layer 1
   iam_instance_profile {
     name = data.terraform_remote_state.core.outputs.ec2_profile_name
   }
 
   vpc_security_group_ids = [data.terraform_remote_state.core.outputs.ec2_sg_id]
 
-  # User Data: Script chạy khi instance khởi động lần đầu
-  # Cài đặt CodeDeploy Agent (Bắt buộc cho CodeDeploy)
+  # User Data: Script runs when instance initializes
+  # Install CodeDeploy Agent (Required for CodeDeploy)
   user_data = base64encode(<<-EOF
               #!/bin/bash
               yum install -y ruby wget
@@ -44,7 +44,7 @@ resource "aws_launch_template" "main" {
 }
 
 # --- Auto Scaling Group ---
-# Quản lý số lượng EC2 instances
+# Manage number of EC2 instances
 resource "aws_autoscaling_group" "main" {
   name                = "${var.project_name}-asg"
   vpc_zone_identifier = data.terraform_remote_state.core.outputs.subnet_ids
@@ -52,7 +52,7 @@ resource "aws_autoscaling_group" "main" {
   min_size            = 2
   desired_capacity    = 2
 
-  # Gắn vào Target Group để nhận Traffic từ ALB
+  # Attach to Target Group to receive Traffic from ALB
   target_group_arns = [aws_lb_target_group.main.arn]
 
   launch_template {

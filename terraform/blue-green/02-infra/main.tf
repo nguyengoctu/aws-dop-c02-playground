@@ -15,7 +15,7 @@ variable "instance_type" {
 }
 
 # --- Remote State Data Source ---
-# Đọc thông tin (State) từ Layer 1 (01-core)
+# Read information (State) from Layer 1 (01-core)
 data "terraform_remote_state" "core" {
   backend = "local"
 

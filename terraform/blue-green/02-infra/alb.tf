@@ -3,7 +3,7 @@ resource "aws_lb" "main" {
   name               = "${var.project_name}-alb"
   internal           = false
   load_balancer_type = "application"
-  # Sử dụng Security Group và Subnets lấy từ Layer 1 (01-core)
+  # Use Security Group and Subnets from Layer 1 (01-core)
   security_groups = [data.terraform_remote_state.core.outputs.alb_sg_id]
   subnets         = data.terraform_remote_state.core.outputs.subnet_ids
 
@@ -13,7 +13,7 @@ resource "aws_lb" "main" {
 }
 
 # --- Target Group ---
-# Đây là Target Group "Blue" ban đầu
+# This is the initial "Blue" Target Group
 resource "aws_lb_target_group" "main" {
   name        = "${var.project_name}-tg"
   port        = 80
@@ -31,7 +31,7 @@ resource "aws_lb_target_group" "main" {
     unhealthy_threshold = 2
   }
 
-  # Deregistration delay giúp connection cũ thoát ra từ từ (30s cho lab nhanh hơn)
+  # Deregistration delay allows old connections to drain slowly (30s for faster lab)
   deregistration_delay = 30
 }
 
